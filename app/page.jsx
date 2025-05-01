@@ -1,11 +1,44 @@
 "use client"
 
-import {useState} from "react"
+import {useEffect, useState} from "react"
 
 export default function Home() {
-    const [total, setTotal] = useState('')
+    const [total, setTotal] = useState(0.00)
+    const [invoice_items, setInvoiceItems] = useState([])
     const [link, setLink] = useState('')
     const [done, setDone] = useState(false)
+
+    const [item, setItem] = useState('')
+    const [price, setPrice] = useState(0)
+    const [quantity, setQuantity] = useState(1)
+
+    function createItem() {
+        let total = price * quantity
+        let id = (Math.random() * 10).toFixed(1)
+        let new_items = {item, price, quantity, total, id}
+        setInvoiceItems([...invoice_items, new_items])
+
+        setItem('')
+        setPrice(0)
+        setQuantity(0)
+    }
+
+    function removeItem(id) {
+        let new_it = invoice_items.filter((item, index) => {
+            return item.id != id
+        })
+        setInvoiceItems([...new_it])
+    }
+
+    function updateTotal() {
+        let tot = 0
+
+        for (let i = 0; i < invoice_items.length; i++) {
+            tot = tot + invoice_items[i].total
+        }
+        setTotal(tot)
+    }
+
 
     function createLink(bytes) {
         let url = 'data:application/pdf;base64,' + bytes
@@ -27,6 +60,10 @@ export default function Home() {
         }
     }
 
+    useEffect(() => {
+        updateTotal()
+    }, [invoice_items])
+
     return (
         <div className=" p-5 flex flex-col items-center ">
             <form onSubmit={createInvoice} className="max-w-[850px] w-full flex gap-6">
@@ -42,10 +79,17 @@ export default function Home() {
                                 <input type="number" name="invoice_number" className="border border-slate-200 p-2" />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-3  w-[40%]">
-                            <div className="flex flex-col gap-1">
+                        <div className="flex justify-between gap-3 ">
+                            <div className="flex flex-col gap-1 w-[40%]">
                                 <label htmlFor="">Date</label>
                                 <input type="date" name="invoice_date" className="border border-slate-200 p-2" />
+                            </div>
+                            <div className="flex flex-col gap-1 w-[40%]">
+                                <label htmlFor="">Currency</label>
+                                <select name="invoice_currency" className="border border-slate-200 p-2">
+                                    <option value="R">Rand</option>
+                                    <option value="$">Dollar</option>
+                                </select>
                             </div>
                         </div>
                         <div className="flex justify-between gap-5">
@@ -81,28 +125,47 @@ export default function Home() {
                             </div>
                         </div>
                         <div>
-                            <div className="grid grid-cols-4 gap-2 mb-2">
+                            <div className="grid grid-cols-5 gap-2 mb-2">
                                 <p>Item</p>
                                 <p>Quantity</p>
                                 <p>Unit Price</p>
                                 <p>Total</p>
                             </div>
+                            <div className=" flex flex-col gap-2 mb-2">
+                                {invoice_items.length > 0 && invoice_items.map((item, key) => {
+                                    return (
+                                        <div key={key} className="grid grid-cols-5 gap-2 bg-slate-800 p-3">
+                                            <p>{item.item}</p>
+                                            <p>{item.quantity}</p>
+                                            <p>{item.price}</p>
+                                            <p>{item.total}</p>
+                                            <button type="button" onClick={() => removeItem(item.id)} className="bg-rose-400 p-1">Remove Item</button>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                             <div className="grid grid-cols-4 gap-2">
                                 <div className="flex flex-col gap-1">
-                                    <input type="text" name="invoice_date" className="border border-slate-200 p-2" />
+                                    <input type="text" name="item_item" value={item} onChange={(e) => setItem(e.target.value)} className="border border-slate-200 p-2" />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <input type="text" name="invoice_date" className="border border-slate-200 p-2" />
+                                    <input type="number" name="item_quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="border border-slate-200 p-2" />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <input type="text" name="invoice_date" className="border border-slate-200 p-2 " />
+                                    <input type="number" name="item_price" value={price} onChange={(e) => setPrice(e.target.value)} className="border border-slate-200 p-2 " />
                                 </div>
-                                <button type="btn" className="bg-rose-400 p-2 ">Save Item</button>
+                                <button type="button" onClick={createItem} className="bg-indigo-600 p-2 ">Save Item</button>
                             </div>
                         </div>
-                        <div className="flex">
-                            <h3>Total</h3>
-                            <h3>{total}</h3>
+                        <div className="flex gap-3  items-end justify-between">
+                            <div className="flex flex-col gap-1 w-[40%]">
+                                <label htmlFor="">Signature</label>
+                                <input type="file" name="invoice_signature" className="border border-slate-200 p-2" />
+                            </div>
+                            <div className="flex gap-3 text-2xl font-bold">
+                                <h3>Total Amount</h3>
+                                <h3>{total}</h3>
+                            </div>
                         </div>
                     </div>
                 </main>
