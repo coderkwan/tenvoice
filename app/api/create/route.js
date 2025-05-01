@@ -2,6 +2,7 @@ import {rgb, StandardFonts, PDFDocument} from 'pdf-lib'
 
 export async function POST(req) {
     const data = await req.json()
+    console.log(data)
 
     let doc = await PDFDocument.create()
     const timesRomanFont = await doc.embedFont(StandardFonts.TimesRoman)
